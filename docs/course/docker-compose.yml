@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # 主课程环境
+  usearch-course:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: usearch-course
+    volumes:
+      # 挂载课程目录
+      - ./:/workspace/course:rw
+      # 持久化 Jupyter 数据
+      - jupyter-data:/root/.jupyter
+      # 共享 USearch 代码
+      - usearch-code:/opt/usearch
+    ports:
+      - "8888:8888"  # Jupyter
+      - "8000:8000"  # FastAPI
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+  # 可选：GPU 支持（需要 nvidia-docker）
+  usearch-course-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: usearch-course-gpu
+    runtime: nvidia
+    volumes:
+      - ./:/workspace/course:rw
+      - jupyter-data:/root/.jupyter
+    ports:
+      - "8888:8888"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  jupyter-data:
+  usearch-code:
